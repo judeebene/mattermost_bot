@@ -1,0 +1,14 @@
+email: bot@example.com
+password: password1
+username: samplebot
+firstname: Sample
+lastname: Bot
+
+logfile: autoadd.log
+
+team: test
+channel: channel0
+
+autoadd: 
+  team1: [channel1, channel2]
+  team2: [channel3]

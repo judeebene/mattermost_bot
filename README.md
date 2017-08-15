@@ -1,15 +1,12 @@
-# Mattermost Bot Sample
+# Mattermost Autoadd Bot
 
 ## Overview
 
-This sample Bot shows how to use the Mattermost [Go driver](https://github.com/mattermost/platform/blob/master/model/client.go) to interact with a Mattermost server, listen to events and respond to messages. Documentation for the Go driver can be found [here](https://godoc.org/github.com/mattermost/platform/model#Client).
+This bot will, based on a simpple configuration, monitor a given channel and add any new user to other teams/channels.
 
-Highlights of APIs used in this sample:
- - Log in to the Mattermost server
- - Create a channel
- - Modify user attributes 
- - Connect and listen to WebSocket events for real-time responses to messages
- - Post a message to a channel
+It's source code is based on the Mattermost Sample Bot.
+
+Documentation for the Go driver can be found [here](https://godoc.org/github.com/mattermost/platform/model#Client).
 
 ## Setup Server Environment
 
@@ -71,3 +68,7 @@ You can verify the Bot is running when
 ## Stop the Bot
 
 1 - In the terminal window, press `CTRL+C` to stop the bot. You should see `Mattermost Bot Sample has stopped running` posted in the `Debugging For Sample Bot` channel.
+
+## Configuration
+
+To be written.

@@ -8,23 +8,29 @@ import (
 	"os/signal"
 	"regexp"
 	"strings"
+	"io/ioutil"
 
+	"gopkg.in/yaml.v2"
 	"github.com/mattermost/platform/model"
 )
 
 const (
 	SAMPLE_NAME = "Mattermost Bot Sample"
-
-	USER_EMAIL    = "bot@example.com"
-	USER_PASSWORD = "password1"
-	USER_NAME     = "samplebot"
-	USER_FIRST    = "Sample"
-	USER_LAST     = "Bot"
-
-	TEAM_NAME        = "botsample"
-	CHANNEL_LOG_NAME = "debugging-for-sample-bot"
 )
 
+type Params struct {
+	Email string `yaml: "email"`
+	Password string `yaml: "password"`
+	Username string `yaml: "username"`
+	FirstName string `yaml: "firstname"`
+	LastName string `yaml: "lastname"`
+	LogChannel string `yaml: "logfile"`
+	Team string `yaml: "team"`
+	Channel string `yaml: "channel"`
+	Autoadd map[string][]string
+}	
+
+var params Params
 var client *model.Client4
 var webSocketClient *model.WebSocketClient
 
@@ -38,6 +44,8 @@ func main() {
 	println(SAMPLE_NAME)
 
 	SetupGracefulShutdown()
+
+	LoadConfiguration();
 
 	client = model.NewAPIv4Client("http://localhost:8065")
 
@@ -85,6 +93,17 @@ func main() {
 	select {}
 }
 
+func LoadConfiguration() {
+	source, err := ioutil.ReadFile("config.yaml")
+	if err != nil {
+		panic(err)
+	}
+	err = yaml.Unmarshal(source, &params)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func MakeSureServerIsRunning() {
 	if props, resp := client.GetOldClientConfig(""); resp.Error != nil {
 		println("There was a problem pinging the Mattermost server.  Are you sure it's running?")
@@ -96,7 +115,7 @@ func MakeSureServerIsRunning() {
 }
 
 func LoginAsTheBotUser() {
-	if user, resp := client.Login(USER_EMAIL, USER_PASSWORD); resp.Error != nil {
+	if user, resp := client.Login(params.Email, params.Password); resp.Error != nil {
 		println("There was a problem logging into the Mattermost server.  Are you sure ran the setup steps from the README.md?")
 		PrintError(resp.Error)
 		os.Exit(1)
@@ -106,10 +125,10 @@ func LoginAsTheBotUser() {
 }
 
 func UpdateTheBotUserIfNeeded() {
-	if botUser.FirstName != USER_FIRST || botUser.LastName != USER_LAST || botUser.Username != USER_NAME {
-		botUser.FirstName = USER_FIRST
-		botUser.LastName = USER_LAST
-		botUser.Username = USER_NAME
+	if botUser.FirstName != params.FirstName || botUser.LastName != params.LastName || botUser.Username != params.Username {
+		botUser.FirstName = params.FirstName
+		botUser.LastName = params.LastName
+		botUser.Username = params.Username
 
 		if user, resp := client.UpdateUser(botUser); resp.Error != nil {
 			println("We failed to update the Sample Bot user")
@@ -123,9 +142,9 @@ func UpdateTheBotUserIfNeeded() {
 }
 
 func FindBotTeam() {
-	if team, resp := client.GetTeamByName(TEAM_NAME, ""); resp.Error != nil {
+	if team, resp := client.GetTeamByName(params.Team, ""); resp.Error != nil {
 		println("We failed to get the initial load")
-		println("or we do not appear to be a member of the team '" + TEAM_NAME + "'")
+		println("or we do not appear to be a member of the team '" + params.Team + "'")
 		PrintError(resp.Error)
 		os.Exit(1)
 	} else {
@@ -134,7 +153,7 @@ func FindBotTeam() {
 }
 
 func CreateBotDebuggingChannelIfNeeded() {
-	if rchannel, resp := client.GetChannelByName(CHANNEL_LOG_NAME, botTeam.Id, ""); resp.Error != nil {
+	if rchannel, resp := client.GetChannelByName(params.LogChannel, botTeam.Id, ""); resp.Error != nil {
 		println("We failed to get the channels")
 		PrintError(resp.Error)
 	} else {
@@ -144,17 +163,17 @@ func CreateBotDebuggingChannelIfNeeded() {
 
 	// Looks like we need to create the logging channel
 	channel := &model.Channel{}
-	channel.Name = CHANNEL_LOG_NAME
+	channel.Name = params.LogChannel
 	channel.DisplayName = "Debugging For Sample Bot"
 	channel.Purpose = "This is used as a test channel for logging bot debug messages"
 	channel.Type = model.CHANNEL_OPEN
 	channel.TeamId = botTeam.Id
 	if rchannel, resp := client.CreateChannel(channel); resp.Error != nil {
-		println("We failed to create the channel " + CHANNEL_LOG_NAME)
+		println("We failed to create the channel " + params.LogChannel)
 		PrintError(resp.Error)
 	} else {
 		debuggingChannel = rchannel
-		println("Looks like this might be the first run so we've created the channel " + CHANNEL_LOG_NAME)
+		println("Looks like this might be the first run so we've created the channel " + params.LogChannel)
 	}
 }
 
