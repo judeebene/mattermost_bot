@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	SAMPLE_NAME = "Mattermost Bot Sample"
+	BOT_NAME = "Pillar Bot"
+	POST_JOIN_CHANNEL = "system_join_channel"
 )
 
 type Params struct {
@@ -36,18 +37,19 @@ var webSocketClient *model.WebSocketClient
 
 var botUser *model.User
 var botTeam *model.Team
+var currentTeam *model.Team
 var debuggingChannel *model.Channel
 
 // Documentation for the Go driver can be found
 // at https://godoc.org/github.com/mattermost/platform/model#Client
 func main() {
-	println(SAMPLE_NAME)
+	println(BOT_NAME)
 
 	SetupGracefulShutdown()
 
 	LoadConfiguration();
 
-	client = model.NewAPIv4Client("http://localhost:8065")
+	client = model.NewAPIv4Client("https://community.pillarproject.io")
 
 	// Lets test to see if the mattermost server is up and running
 	MakeSureServerIsRunning()
@@ -69,10 +71,10 @@ func main() {
 
 	// Lets create a bot channel for logging debug messages into
 	CreateBotDebuggingChannelIfNeeded()
-	SendMsgToDebuggingChannel("_"+SAMPLE_NAME+" has **started** running_", "")
+	SendMsgToDebuggingChannel("_"+BOT_NAME+" has **started** running_", "")
 
 	// Lets start listening to some channels via the websocket!
-	webSocketClient, err := model.NewWebSocketClient("ws://localhost:8065", client.AuthToken)
+	webSocketClient, err := model.NewWebSocketClient("wss://community.pillarproject.io", client.AuthToken)
 	if err != nil {
 		println("We failed to connect to the web socket")
 		PrintError(err)
@@ -153,7 +155,7 @@ func FindBotTeam() {
 }
 
 func CreateBotDebuggingChannelIfNeeded() {
-	if rchannel, resp := client.GetChannelByName(params.LogChannel, botTeam.Id, ""); resp.Error != nil {
+	if rchannel, resp := client.GetChannelByName(params.Channel, botTeam.Id, ""); resp.Error != nil {
 		println("We failed to get the channels")
 		PrintError(resp.Error)
 	} else {
@@ -238,7 +240,52 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 			SendMsgToDebuggingChannel("Yes I'm running", post.Id)
 			return
 		}
-	}
+
+		// if someone join this channel, we added the person to other channels
+
+		if post.Type == POST_JOIN_CHANNEL{
+
+				// get the current user that joined this channel
+				joinUserId := post.UserId
+				joinedUserName := post.Props["username"].(string)
+				//println("event property" + joinUserId + joinedUserName)
+    			SendMsgToDebuggingChannel(" new user " + joinUserId + joinedUserName +"join", post.Id)
+
+    		// get the default team list and add the user
+    		 //for teamName,teamChannels := range params.Autoadd {
+    		 			
+    		 			//addUser to team requires team ID
+    		 			// https://github.com/mattermost/platform/blob/master/model/client.go#L361
+
+    		 	 	/*if currentTeam, resp := client.GetTeamByName(teamName ,"");
+    		 	 	 resp.Error != nil {
+				
+		
+					  // currentTeamId = currentTeam.Id
+
+					  // println(" team Id" + currentTeam.Id)
+					   SendMsgToDebuggingChannel( currentTeam.Id, post.Id)
+
+					  .
+
+					   	for _, v := range teamChannels{
+					   		println(v)
+					   	}*/
+
+					//} 
+
+    		 	//}
+
+    		 }
+			 
+
+
+			
+			return 
+		}
+
+		
+	
 
 	SendMsgToDebuggingChannel("I did not understand you!", post.Id)
 }
@@ -259,7 +306,7 @@ func SetupGracefulShutdown() {
 				webSocketClient.Close()
 			}
 
-			SendMsgToDebuggingChannel("_"+SAMPLE_NAME+" has **stopped** running_", "")
+			SendMsgToDebuggingChannel("_"+BOT_NAME+" has **stopped** running_", "")
 			os.Exit(0)
 		}
 	}()

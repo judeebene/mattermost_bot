@@ -1,14 +1,14 @@
-email: bot@example.com
-password: password1
-username: samplebot
-firstname: Sample
+email: botpillar@gmail.com
+password: icecube100
+username: pillar-bot
+firstname: Pillar
 lastname: Bot
 
-logfile: autoadd.log
+logfile: debugging-for-pillar-bot
 
-team: test
-channel: channel0
+team: pillarteam
+channel: debugging-for-pillar-bot
 
 autoadd: 
-  team1: [channel1, channel2]
+  pillarteam: [announcements, a-blockchain-news,a-introductions,a-jobs-to-be-done]
   team2: [channel3]
