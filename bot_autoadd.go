@@ -4,9 +4,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
-	"regexp"
+//	"regexp"
 	"strings"
 	"io/ioutil"
 
@@ -217,33 +218,9 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 			return
 		}
 
-		// if you see any word matching 'alive' then respond
-		if matched, _ := regexp.MatchString(`(?:^|\W)alive(?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("Yes I'm running", post.Id)
-			return
-		}
-
-		// if you see any word matching 'up' then respond
-		if matched, _ := regexp.MatchString(`(?:^|\W)up(?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("Yes I'm running", post.Id)
-			return
-		}
-
-		// if you see any word matching 'running' then respond
-		if matched, _ := regexp.MatchString(`(?:^|\W)running(?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("Yes I'm running", post.Id)
-			return
-		}
-
-		// if you see any word matching 'hello' then respond
-		if matched, _ := regexp.MatchString(`(?:^|\W)hello(?:$|\W)`, post.Message); matched {
-			SendMsgToDebuggingChannel("Yes I'm running", post.Id)
-			return
-		}
-
 		// if someone join this channel, we added the person to other channels
 
-		if post.Type == POST_JOIN_CHANNEL{
+		if post.Type == POST_JOIN_CHANNEL {
 			// get the current user that joined this channel
 			joinUserId := post.UserId
 			joinedUserName := post.Props["username"].(string)
@@ -251,11 +228,11 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 			SendMsgToDebuggingChannel(" new user " + joinUserId + joinedUserName +"join", post.Id)
 
 			for k, v := range params.Autoadd {
-				resp, err := client.GetTeamByName(k);
+				resp, err := client.GetTeamByName(k, "");
 				if err == nil {
-					AddUserToTeam(joinedUserName, k, v, resp);
+					AddUserToTeam(joinedUserName, k, v, resp)
 				} else {
-					SendMsgToDebuggingChannel(" error getting team " + k);
+					SendMsgToDebuggingChannel(" error getting team " + k, post.Id)
 				}
 
 			}
@@ -263,14 +240,15 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 		 }
 
 	SendMsgToDebuggingChannel("I did not understand you!", post.Id)
+	}
 }
 
-func AddUserToTeam(string user, string team, []string channels, *Result tr) {
+func AddUserToTeam(user string, team string, channels []string, tr *model.Team) {
 	// TODO
 }
 
 // https://api.mattermost.com/#tag/channels%2Fpaths%2F~1channels~1%7Bchannel_id%7D~1members%2Fpost
-func AddUserToChannel(string channel_id, string user_id, string roles) {
+func AddUserToChannel(channel_id string, user_id string, roles string) (*model.Result, *model.AppError) {
 	request := fmt.Sprintf(`{
 		"channel_id": %s,
 		"user_id": %s,
@@ -280,9 +258,9 @@ func AddUserToChannel(string channel_id, string user_id, string roles) {
 	if r, err := client.DoApiPost("/channels/" + channel_id + "/members", request); err != nil {
 		return nil, err
 	} else {
-		defer closeBody(r)
-		return &Result{r.Header.Get(HEADER_REQUEST_ID),
-			r.Header.Get(HEADER_ETAG_SERVER), TeamFromJson(r.Body)}, nil
+		//defer model.closeBody(r)
+		return &model.Result{r.Header.Get(model.HEADER_REQUEST_ID),
+			r.Header.Get(model.HEADER_ETAG_SERVER), model.TeamFromJson(r.Body)}, nil
 	}
 }
 
