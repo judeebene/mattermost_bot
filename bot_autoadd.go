@@ -244,50 +244,46 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 		// if someone join this channel, we added the person to other channels
 
 		if post.Type == POST_JOIN_CHANNEL{
+			// get the current user that joined this channel
+			joinUserId := post.UserId
+			joinedUserName := post.Props["username"].(string)
 
-				// get the current user that joined this channel
-				joinUserId := post.UserId
-				joinedUserName := post.Props["username"].(string)
-				//println("event property" + joinUserId + joinedUserName)
-    			SendMsgToDebuggingChannel(" new user " + joinUserId + joinedUserName +"join", post.Id)
+			SendMsgToDebuggingChannel(" new user " + joinUserId + joinedUserName +"join", post.Id)
 
-    		// get the default team list and add the user
-    		 //for teamName,teamChannels := range params.Autoadd {
-    		 			
-    		 			//addUser to team requires team ID
-    		 			// https://github.com/mattermost/platform/blob/master/model/client.go#L361
+			for k, v := range params.Autoadd {
+				resp, err := client.GetTeamByName(k);
+				if err == nil {
+					AddUserToTeam(joinedUserName, k, v, resp);
+				} else {
+					SendMsgToDebuggingChannel(" error getting team " + k);
+				}
 
-    		 	 	/*if currentTeam, resp := client.GetTeamByName(teamName ,"");
-    		 	 	 resp.Error != nil {
-				
-		
-					  // currentTeamId = currentTeam.Id
+			}
 
-					  // println(" team Id" + currentTeam.Id)
-					   SendMsgToDebuggingChannel( currentTeam.Id, post.Id)
-
-					  .
-
-					   	for _, v := range teamChannels{
-					   		println(v)
-					   	}*/
-
-					//} 
-
-    		 	//}
-
-    		 }
-			 
-
-
-			
-			return 
-		}
-
-		
-	
+		 }
 
 	SendMsgToDebuggingChannel("I did not understand you!", post.Id)
+}
+
+func AddUserToTeam(string user, string team, []string channels, *Result tr) {
+	// TODO
+}
+
+// https://api.mattermost.com/#tag/channels%2Fpaths%2F~1channels~1%7Bchannel_id%7D~1members%2Fpost
+func AddUserToChannel(string channel_id, string user_id, string roles) {
+	request := fmt.Sprintf(`{
+		"channel_id": %s,
+		"user_id": %s,
+		"roles": %s,
+		}`, channel_id, user_id, roles)
+
+	if r, err := client.DoApiPost("/channels/" + channel_id + "/members", request); err != nil {
+		return nil, err
+	} else {
+		defer closeBody(r)
+		return &Result{r.Header.Get(HEADER_REQUEST_ID),
+			r.Header.Get(HEADER_ETAG_SERVER), TeamFromJson(r.Body)}, nil
+	}
 }
 
 func PrintError(err *model.AppError) {
