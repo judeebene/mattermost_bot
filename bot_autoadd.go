@@ -222,15 +222,18 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 
 		if post.Type == POST_JOIN_CHANNEL {
 			// get the current user that joined this channel
-			joinUserId := post.UserId
+			joinedUserId := post.UserId
 			joinedUserName := post.Props["username"].(string)
 
-			SendMsgToDebuggingChannel(" new user " + joinUserId + joinedUserName +"join", post.Id)
+			SendMsgToDebuggingChannel(" new user " + joinedUserId + joinedUserName +"join", post.Id)
 
 			for k, v := range params.Autoadd {
-				resp, err := client.GetTeamByName(k, "");
-				if err == nil {
-					AddUserToTeam(joinedUserName, k, v, resp)
+				if team, err := client.GetTeamByName(k, ""); err == nil {
+	
+
+					println("id" + team.Id)
+
+					AddUserToTeam(joinedUserId, team.Id, k, v, team)
 				} else {
 					SendMsgToDebuggingChannel(" error getting team " + k, post.Id)
 				}
@@ -243,8 +246,35 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 	}
 }
 
-func AddUserToTeam(user string, team string, channels []string, tr *model.Team) {
+func AddUserToTeam(user string, team_id string, team_name string, channels []string, tr *model.Team) {
 	// TODO
+
+		
+
+		_, err  := client.AddTeamMember( team_id, user);
+		 if err == nil{
+
+		 	 for _, channel_to_join := range channels {
+		 	 	
+		 	 	rchannel, err := client.GetChannelByName(channel_to_join, team_id, "");
+                   
+                   if err == nil{
+
+                    
+                   	AddUserToChannel(rchannel.Id , user , "member")
+                   }
+
+
+				 
+				}
+
+		 	}
+
+	
+
+		
+
+
 }
 
 // https://api.mattermost.com/#tag/channels%2Fpaths%2F~1channels~1%7Bchannel_id%7D~1members%2Fpost

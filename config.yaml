@@ -1,6 +1,6 @@
-email: ******.com
-password: *****
-username: ****
+email: botpillar@gmail.com
+password: icecube100
+username: pillar-bot
 firstname: Pillar
 lastname: Bot
 
@@ -10,5 +10,5 @@ team: pillarteam
 channel: debugging-for-pillar-bot
 
 autoadd: 
-  pillarteam: [announcements, a-blockchain-news,a-introductions,a-jobs-to-be-done]
+  volunteers: [Introductions, design-contest,projects,a-jobs-to-be-done]
   team2: [channel3]
