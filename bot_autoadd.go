@@ -212,7 +212,6 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 
 	post := model.PostFromJson(strings.NewReader(event.Data["post"].(string)))
 	if post != nil {
-
 		// ignore my events
 		if post.UserId == botUser.Id {
 			return
@@ -229,11 +228,9 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 
 			for k, v := range params.Autoadd {
 				if team, err := client.GetTeamByName(k, ""); err == nil {
-	
-
 					println("id" + team.Id)
 
-					AddUserToTeam(joinedUserId, team.Id, k, v, team)
+					AddUserToTeam(joinedUserId, team.Id, k, v, team, post.Id)
 				} else {
 					SendMsgToDebuggingChannel(" error getting team " + k, post.Id)
 				}
@@ -241,40 +238,30 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 			}
 
 		 }
-
-	SendMsgToDebuggingChannel("I did not understand you!", post.Id)
 	}
 }
 
-func AddUserToTeam(user string, team_id string, team_name string, channels []string, tr *model.Team) {
-	// TODO
+func AddUserToTeam(user string, team_id string, team_name string, channels []string, tr *model.Team, id string) {
+	_, err  := client.AddTeamMember( team_id, user);
+	if err != nil {
+		SendMsgToDebuggingChannel("Could not add user to team!", id)
 
-		
+		return
+	}
 
-		_, err  := client.AddTeamMember( team_id, user);
-		 if err == nil{
+	for _, channel_to_join := range channels {
+		rchannel, err_get_channel := client.GetChannelByName(channel_to_join, team_id, "");
+		if err_get_channel != nil {
+			SendMsgToDebuggingChannel("Could not get channel by name: " + channel_to_join, id)
 
-		 	 for _, channel_to_join := range channels {
-		 	 	
-		 	 	rchannel, err := client.GetChannelByName(channel_to_join, team_id, "");
-                   
-                   if err == nil{
+			continue
+		}
 
-                    
-                   	AddUserToChannel(rchannel.Id , user , "member")
-                   }
-
-
-				 
-				}
-
-		 	}
-
-	
-
-		
-
-
+		_, err_add := AddUserToChannel(rchannel.Id , user , "member")
+		if err_add != nil {
+			SendMsgToDebuggingChannel("Could not join channel: " + channel_to_join, id)
+		}
+	}
 }
 
 // https://api.mattermost.com/#tag/channels%2Fpaths%2F~1channels~1%7Bchannel_id%7D~1members%2Fpost
