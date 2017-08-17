@@ -236,16 +236,18 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 			SendMsgToDebuggingChannel("* responding to monitored event", "")
 
 			// get the current user that joined this channel
-			joinedUserId := post.UserId
 			joinedUserName := post.Props["username"].(string)
 
-			SendMsgToDebuggingChannel(" new user " + joinedUserId + joinedUserName +"join", "")
+			SendMsgToDebuggingChannel("* new user " + joinedUserName + " join", "")
+
+			user, resp := client.GetUserByUsername(joinedUserName, "")
+			if resp.Error != nil {
+				SendMsgToDebuggingChannel(" error getting user " + joinedUserName, "")
+			}
 
 			for k, v := range params.Autoadd {
 				if team, resp := client.GetTeamByName(k, ""); resp.Error == nil {
-					println("id" + team.Id)
-
-					AddUserToTeam(joinedUserId, team.Id, k, v, team)
+					AddUserToTeam(user.Id, team.Id, k, v, team)
 				} else {
 					SendMsgToDebuggingChannel(" error getting team " + k, "")
 
