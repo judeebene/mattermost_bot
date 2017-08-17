@@ -1,13 +1,14 @@
-email: botpillar@gmail.com
-password: icecube100
-username: pillar-bot
+email: bot@example.com
+password: password1
+username: samplebot
 firstname: Pillar
 lastname: Bot
+server: localhost:8065
 
-logfile: debugging-for-pillar-bot
+debugchannel: debugging-for-pillar-bot
 
-team: pillarteam
-channel: debugging-for-pillar-bot
+team: Test
+channel: "Town Hall"
 
 autoadd: 
   volunteers: [Introductions, design-contest,projects,a-jobs-to-be-done]

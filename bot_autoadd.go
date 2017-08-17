@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-//	"regexp"
 	"strings"
 	"io/ioutil"
 
@@ -17,7 +16,6 @@ import (
 
 const (
 	BOT_NAME = "Pillar Bot"
-	POST_JOIN_CHANNEL = "system_join_channel"
 )
 
 type Params struct {
@@ -26,10 +24,11 @@ type Params struct {
 	Username string `yaml: "username"`
 	FirstName string `yaml: "firstname"`
 	LastName string `yaml: "lastname"`
-	LogChannel string `yaml: "logfile"`
+	Server string `yaml: "server"`
+	DebugChannel string `yaml: "debugchannel"`
 	Team string `yaml: "team"`
 	Channel string `yaml: "channel"`
-	Autoadd map[string][]string
+	Autoadd map[string][]string `yaml: "autoadd"`
 }	
 
 var params Params
@@ -40,6 +39,7 @@ var botUser *model.User
 var botTeam *model.Team
 var currentTeam *model.Team
 var debuggingChannel *model.Channel
+var monitoredChannel *model.Channel
 
 // Documentation for the Go driver can be found
 // at https://godoc.org/github.com/mattermost/platform/model#Client
@@ -50,7 +50,7 @@ func main() {
 
 	LoadConfiguration();
 
-	client = model.NewAPIv4Client("https://community.pillarproject.io")
+	client = model.NewAPIv4Client("http://" + params.Server)
 
 	// Lets test to see if the mattermost server is up and running
 	MakeSureServerIsRunning()
@@ -74,8 +74,10 @@ func main() {
 	CreateBotDebuggingChannelIfNeeded()
 	SendMsgToDebuggingChannel("_"+BOT_NAME+" has **started** running_", "")
 
+	JoinMonitoredChannel()
+
 	// Lets start listening to some channels via the websocket!
-	webSocketClient, err := model.NewWebSocketClient("wss://community.pillarproject.io", client.AuthToken)
+	webSocketClient, err := model.NewWebSocketClient("wss://" + params.Server, client.AuthToken)
 	if err != nil {
 		println("We failed to connect to the web socket")
 		PrintError(err)
@@ -156,7 +158,7 @@ func FindBotTeam() {
 }
 
 func CreateBotDebuggingChannelIfNeeded() {
-	if rchannel, resp := client.GetChannelByName(params.Channel, botTeam.Id, ""); resp.Error != nil {
+	if rchannel, resp := client.GetChannelByName(params.DebugChannel, botTeam.Id, ""); resp.Error != nil {
 		println("We failed to get the channels")
 		PrintError(resp.Error)
 	} else {
@@ -166,18 +168,30 @@ func CreateBotDebuggingChannelIfNeeded() {
 
 	// Looks like we need to create the logging channel
 	channel := &model.Channel{}
-	channel.Name = params.LogChannel
+	channel.Name = params.DebugChannel
 	channel.DisplayName = "Debugging For Sample Bot"
 	channel.Purpose = "This is used as a test channel for logging bot debug messages"
 	channel.Type = model.CHANNEL_OPEN
 	channel.TeamId = botTeam.Id
 	if rchannel, resp := client.CreateChannel(channel); resp.Error != nil {
-		println("We failed to create the channel " + params.LogChannel)
+		println("We failed to create the channel " + params.DebugChannel)
 		PrintError(resp.Error)
 	} else {
 		debuggingChannel = rchannel
-		println("Looks like this might be the first run so we've created the channel " + params.LogChannel)
+		println("Looks like this might be the first run so we've created the channel " + params.DebugChannel)
 	}
+}
+
+func JoinMonitoredChannel() {
+	if rchannel, resp := client.GetChannelByName(params.DebugChannel, botTeam.Id, ""); resp.Error != nil {
+		println("We failed to get the channels")
+		PrintError(resp.Error)
+	} else {
+		monitoredChannel = rchannel
+		return
+	}
+
+	// TODO: join the channel if failed
 }
 
 func SendMsgToDebuggingChannel(msg string, replyToId string) {
@@ -194,10 +208,10 @@ func SendMsgToDebuggingChannel(msg string, replyToId string) {
 }
 
 func HandleWebSocketResponse(event *model.WebSocketEvent) {
-	HandleMsgFromDebuggingChannel(event)
+	HandleMsgFromMonitoredChannel(event)
 }
 
-func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
+func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 	// If this isn't the debugging channel then lets ingore it
 	if event.Broadcast.ChannelId != debuggingChannel.Id {
 		return
@@ -219,7 +233,7 @@ func HandleMsgFromDebuggingChannel(event *model.WebSocketEvent) {
 
 		// if someone join this channel, we added the person to other channels
 
-		if post.Type == POST_JOIN_CHANNEL {
+		if post.Type == model.POST_JOIN_CHANNEL {
 			// get the current user that joined this channel
 			joinedUserId := post.UserId
 			joinedUserName := post.Props["username"].(string)
