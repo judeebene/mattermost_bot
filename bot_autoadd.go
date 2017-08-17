@@ -4,7 +4,7 @@
 package main
 
 import (
-	"fmt"
+//	"fmt"
 	"os"
 	"os/signal"
 	"strings"
@@ -287,11 +287,14 @@ func AddUserToTeam(user string, team_id string, team_name string, channels []str
 
 // https://api.mattermost.com/#tag/channels%2Fpaths%2F~1channels~1%7Bchannel_id%7D~1members%2Fpost
 func AddUserToChannel(channel_id string, user_id string, roles string) (*model.Result, *model.AppError) {
-	request := fmt.Sprintf(`{
-		"channel_id": %s,
-		"user_id": %s,
-		"roles": %s,
-		}`, channel_id, user_id, roles)
+	//request := fmt.Sprintf(`{
+	//	"channel_id": %s,
+	//	"user_id": %s,
+	//	"roles": %s,
+	//	}`, channel_id, user_id, roles)
+
+	member := model.ChannelMember{ChannelId: channel_id, UserId: user_id}
+	request := member.ToJson()
 
 	if r, err := client.DoApiPost("/channels/" + channel_id + "/members", request); err != nil {
 		return nil, err
