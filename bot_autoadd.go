@@ -185,7 +185,7 @@ func CreateBotDebuggingChannelIfNeeded() {
 }
 
 func JoinMonitoredChannel() {
-	if rchannel, resp := client.GetChannelByName(params.DebugChannel, botTeam.Id, ""); resp.Error != nil {
+	if rchannel, resp := client.GetChannelByName(params.Channel, botTeam.Id, ""); resp.Error != nil {
 		println("We failed to get the channels")
 		PrintError(resp.Error)
 	} else {
@@ -225,10 +225,6 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 	}
 
 	post := model.PostFromJson(strings.NewReader(event.Data["post"].(string)))
-
-	println("* responding to monitored event")
-	SendMsgToDebuggingChannel("* responding to monitored event", post.Id)
-
 	if post != nil {
 		// ignore my events
 		if post.UserId == botUser.Id {
@@ -237,19 +233,23 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 
 		// if someone join this channel, we added the person to other channels
 		if post.Type == model.POST_JOIN_CHANNEL {
+			SendMsgToDebuggingChannel("* responding to monitored event", "")
+
 			// get the current user that joined this channel
 			joinedUserId := post.UserId
 			joinedUserName := post.Props["username"].(string)
 
-			SendMsgToDebuggingChannel(" new user " + joinedUserId + joinedUserName +"join", post.Id)
+			SendMsgToDebuggingChannel(" new user " + joinedUserId + joinedUserName +"join", "")
 
 			for k, v := range params.Autoadd {
-				if team, err := client.GetTeamByName(k, ""); err == nil {
+				if team, resp := client.GetTeamByName(k, ""); resp.Error == nil {
 					println("id" + team.Id)
 
-					AddUserToTeam(joinedUserId, team.Id, k, v, team, post.Id)
+					AddUserToTeam(joinedUserId, team.Id, k, v, team)
 				} else {
-					SendMsgToDebuggingChannel(" error getting team " + k, post.Id)
+					SendMsgToDebuggingChannel(" error getting team " + k, "")
+
+					PrintError(resp.Error)
 				}
 
 			}
@@ -258,25 +258,27 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 	}
 }
 
-func AddUserToTeam(user string, team_id string, team_name string, channels []string, tr *model.Team, id string) {
-	_, err  := client.AddTeamMember( team_id, user);
-	if err != nil {
-		SendMsgToDebuggingChannel("Could not add user to team!", id)
+func AddUserToTeam(user string, team_id string, team_name string, channels []string, tr *model.Team) {
+	_, resp  := client.AddTeamMember( team_id, user);
+	if resp.Error != nil {
+		SendMsgToDebuggingChannel("Could not add user to team!", "")
 
 		return
 	}
 
 	for _, channel_to_join := range channels {
-		rchannel, err_get_channel := client.GetChannelByName(channel_to_join, team_id, "");
-		if err_get_channel != nil {
-			SendMsgToDebuggingChannel("Could not get channel by name: " + channel_to_join, id)
+		rchannel, resp1 := client.GetChannelByName(channel_to_join, team_id, "");
+		if resp1.Error != nil {
+			SendMsgToDebuggingChannel("Could not get channel by name: " + channel_to_join, "")
 
 			continue
 		}
 
-		_, err_add := AddUserToChannel(rchannel.Id , user , "member")
-		if err_add != nil {
-			SendMsgToDebuggingChannel("Could not join channel: " + channel_to_join, id)
+		_, err := AddUserToChannel(rchannel.Id , user , "member")
+		if err != nil {
+			SendMsgToDebuggingChannel("Could not join channel: " + channel_to_join, "")
+
+			PrintError(err)
 		}
 	}
 }
