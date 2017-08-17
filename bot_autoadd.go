@@ -215,7 +215,7 @@ func HandleWebSocketResponse(event *model.WebSocketEvent) {
 
 func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 	// If this isn't the debugging channel then lets ingore it
-	if event.Broadcast.ChannelId != debuggingChannel.Id {
+	if event.Broadcast.ChannelId != monitoredChannel.Id {
 		return
 	}
 
@@ -224,9 +224,11 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 		return
 	}
 
-	println("responding to debugging channel msg")
-
 	post := model.PostFromJson(strings.NewReader(event.Data["post"].(string)))
+
+	println("* responding to monitored event")
+	SendMsgToDebuggingChannel("* responding to monitored event", post.Id)
+
 	if post != nil {
 		// ignore my events
 		if post.UserId == botUser.Id {
@@ -234,7 +236,6 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 		}
 
 		// if someone join this channel, we added the person to other channels
-
 		if post.Type == model.POST_JOIN_CHANNEL {
 			// get the current user that joined this channel
 			joinedUserId := post.UserId
