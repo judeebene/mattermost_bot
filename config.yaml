@@ -7,8 +7,8 @@ server: localhost:8065
 
 debugchannel: debugging-for-pillar-bot
 
-team: Test
-channel: "Town Hall"
+team: test
+channel: town-square
 
 autoadd: 
   volunteers: [Introductions, design-contest,projects,a-jobs-to-be-done]

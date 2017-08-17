@@ -81,6 +81,8 @@ func main() {
 	if err != nil {
 		println("We failed to connect to the web socket")
 		PrintError(err)
+
+		return;
 	}
 
 	webSocketClient.Listen()
