@@ -29,6 +29,7 @@ type Params struct {
 	Team string `yaml: "team"`
 	Channel string `yaml: "channel"`
 	Autoadd map[string][]string `yaml: "autoadd"`
+	
 }	
 
 var params Params
@@ -40,6 +41,7 @@ var botTeam *model.Team
 var currentTeam *model.Team
 var debuggingChannel *model.Channel
 var monitoredChannel *model.Channel
+var allChannel *model.Channel
 
 // Documentation for the Go driver can be found
 // at https://godoc.org/github.com/mattermost/platform/model#Client
@@ -50,7 +52,7 @@ func main() {
 
 	LoadConfiguration();
 
-	client = model.NewAPIv4Client("http://" + params.Server)
+	client = model.NewAPIv4Client("https://" + params.Server)
 
 	// Lets test to see if the mattermost server is up and running
 	MakeSureServerIsRunning()
@@ -77,7 +79,7 @@ func main() {
 	JoinMonitoredChannel()
 
 	// Lets start listening to some channels via the websocket!
-	webSocketClient, err := model.NewWebSocketClient("ws://" + params.Server, client.AuthToken)
+	webSocketClient, err := model.NewWebSocketClient("wss://" + params.Server, client.AuthToken)
 	if err != nil {
 		println("We failed to connect to the web socket")
 		PrintError(err)
@@ -245,9 +247,34 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 				SendMsgToDebuggingChannel(" error getting user " + joinedUserName, "")
 			}
 
+			 
 			for k, v := range params.Autoadd {
 				if team, resp := client.GetTeamByName(k, ""); resp.Error == nil {
-					AddUserToTeam(user.Id, team.Id, k, v, team)
+					  
+					 
+					// get the list of Channels from the team
+					if allChannel , err := client.GetPublicChannelsForTeam(team.Id,0,100 , ""); err.Error == nil{
+					 	
+                         
+						 for _, channelInTeam := range allChannel{
+						 	 
+						 	 // omit some optional channels
+						 	 for _, i  :=  range v{
+						 	
+						 	 if channelInTeam.Name != i{
+
+						 	 	println("Display name" + channelInTeam.Name)
+
+						 	 	AddUserToTeam(user.Id, team.Id, k, channelInTeam, team)
+						 	 
+						 	   }
+						      }
+						}
+					 	
+
+
+					 }
+					
 				} else {
 					SendMsgToDebuggingChannel(" error getting team " + k, "")
 
