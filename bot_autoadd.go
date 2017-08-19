@@ -235,12 +235,12 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 
 		// if someone join this channel, we added the person to other channels
 		if post.Type == model.POST_JOIN_CHANNEL {
-			SendMsgToDebuggingChannel("* responding to monitored event", "")
+			//SendMsgToDebuggingChannel("* responding to monitored event", "")
 
 			// get the current user that joined this channel
 			joinedUserName := post.Props["username"].(string)
 
-			SendMsgToDebuggingChannel("* new user " + joinedUserName + " join", "")
+			SendMsgToDebuggingChannel(" Welcome to Pillar project community " + joinedUserName , "")
 
 			user, resp := client.GetUserByUsername(joinedUserName, "")
 			if resp.Error != nil {
@@ -259,12 +259,11 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 						 for _, channelInTeam := range allChannel{
 						 	 
 						 	 // omit some optional channels
-						 	 for _, i  :=  range v{
+						 	 for _, optionalChannel  :=  range v{
 						 	
-						 	 if channelInTeam.Name != i{
+						 	 if channelInTeam.Name != optionalChannel{
 
-						 	 	println("Display name" + channelInTeam.Name)
-
+						 	 
 						 	 	AddUserToTeam(user.Id, team.Id, k, channelInTeam, team)
 						 	 
 						 	   }
