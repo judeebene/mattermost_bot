@@ -4,7 +4,7 @@
 package main
 
 import (
-//	"fmt"
+	//"fmt"
 	"os"
 	"os/signal"
 	"strings"
@@ -43,6 +43,8 @@ var debuggingChannel *model.Channel
 var monitoredChannel *model.Channel
 var allChannel *model.Channel
 
+var  channelList []string 
+
 // Documentation for the Go driver can be found
 // at https://godoc.org/github.com/mattermost/platform/model#Client
 func main() {
@@ -74,7 +76,7 @@ func main() {
 
 	// Lets create a bot channel for logging debug messages into
 	CreateBotDebuggingChannelIfNeeded()
-	SendMsgToDebuggingChannel("_"+BOT_NAME+" has **started** running_", "")
+	//SendMsgToDebuggingChannel("_"+BOT_NAME+" has **started** running_", "")
 
 	JoinMonitoredChannel()
 
@@ -240,13 +242,14 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 			// get the current user that joined this channel
 			joinedUserName := post.Props["username"].(string)
 
-			SendMsgToDebuggingChannel(" Welcome to Pillar project community " + joinedUserName , "")
+			//SendMsgToDebuggingChannel("* new user " + joinedUserName + " join", "")
 
 			user, resp := client.GetUserByUsername(joinedUserName, "")
 			if resp.Error != nil {
 				SendMsgToDebuggingChannel(" error getting user " + joinedUserName, "")
 			}
 
+				 
 			 
 			for k, v := range params.Autoadd {
 				if team, resp := client.GetTeamByName(k, ""); resp.Error == nil {
@@ -255,20 +258,34 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 					// get the list of Channels from the team
 					if allChannel , err := client.GetPublicChannelsForTeam(team.Id,0,100 , ""); err.Error == nil{
 					 	
-                         
-						 for _, channelInTeam := range allChannel{
-						 	 
-						 	 // omit some optional channels
-						 	 for _, optionalChannel  :=  range v{
-						 	
-						 	 if channelInTeam.Name != optionalChannel{
+                         channelList := make([]string, len(allChannel))
 
+                        
+
+
+						 for i, channelInTeam := range allChannel{
+
+						 	// removed optional list from default list
+						 	 for _, blackList  :=  range v{
+
+
+						 	 	if channelInTeam.Name != blackList{
+ 							
+ 							channelList[i] = channelInTeam.Name
+ 								
+ 								}
+
+ 								}
+ 								
+ 							
+ 						}
+						 
+
+						 	 	AddUserToTeam(user.Id, team.Id, k, channelList, team)
 						 	 
-						 	 	AddUserToTeam(user.Id, team.Id, k, channelInTeam, team)
-						 	 
-						 	   }
-						      }
-						}
+						 	   //}
+						      //}
+						
 					 	
 
 
@@ -347,7 +364,7 @@ func SetupGracefulShutdown() {
 				webSocketClient.Close()
 			}
 
-			SendMsgToDebuggingChannel("_"+BOT_NAME+" has **stopped** running_", "")
+			//SendMsgToDebuggingChannel("_"+BOT_NAME+" has **stopped** running_", "")
 			os.Exit(0)
 		}
 	}()

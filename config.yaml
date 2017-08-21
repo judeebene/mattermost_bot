@@ -1,14 +1,14 @@
-email: *****
-password: ******
-username: *****
-firstname: ***
-lastname: **
+email: ******
+password: *****
+username: pillar-bot
+firstname: Pillar
+lastname: Bot
 server: "*******"
 
-debugchannel: debugging-for-pillar-bot
+debugchannel: town-square
 
 team: pillarteam
-channel: debugging-for-pillar-bot
+channel: town-square
 
 autoadd:
   # pillarteam: [town-square,announcements,a-blockchain-news, a-introductions, a-jobs-to-be-done,
