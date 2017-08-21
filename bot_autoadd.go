@@ -246,7 +246,8 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 
 			user, resp := client.GetUserByUsername(joinedUserName, "")
 			if resp.Error != nil {
-				SendMsgToDebuggingChannel(" error getting user " + joinedUserName, "")
+				//SendMsgToDebuggingChannel(" error getting user " + joinedUserName, "")
+			  println(" error getting user " + joinedUserName)
 			}
 
 				 
@@ -267,7 +268,7 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 						 for i, channelInTeam := range allChannel{
 
 						    
-						     
+		     
 
 						 isChannelAvailable :=in_array(channelInTeam.Name, v)
 
@@ -292,7 +293,8 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 					 }
 					
 				} else {
-					SendMsgToDebuggingChannel(" error getting team " + k, "")
+					//SendMsgToDebuggingChannel(" error getting team " + k, "")
+					println( " error getting team " + k, "")
 
 					PrintError(resp.Error)
 				}
@@ -306,7 +308,8 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 func AddUserToTeam(user string, team_id string, team_name string, channels []string, tr *model.Team) {
 	_, resp  := client.AddTeamMember( team_id, user);
 	if resp.Error != nil {
-		SendMsgToDebuggingChannel("Could not add user to team!", "")
+		// SendMsgToDebuggingChannel("Could not add user to team!", "")
+		println("Could not add user to team!" + team_id)
 
 		return
 	}
@@ -321,8 +324,9 @@ func AddUserToTeam(user string, team_id string, team_name string, channels []str
 
 		_, err := AddUserToChannel(rchannel.Id , user , "member")
 		if err != nil {
-			SendMsgToDebuggingChannel("Could not join channel: " + channel_to_join, "")
+			//SendMsgToDebuggingChannel("Could not join channel: " + channel_to_join, "")
 
+			println("Could not join channel: " + channel_to_join)
 			PrintError(err)
 		}
 	}

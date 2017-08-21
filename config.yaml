@@ -21,5 +21,11 @@ autoadd:
 
 #team name and channels to excludes from auto adding
   pillarteam:  [geo-africa , geo-asia , geo-canada , geo-south-america ,geo-uk , geo-usa] 
+  contests:   []
+  partners:   []
+  research:   []
+  volunteers:  []
+  core-wallet : []
   
+
 
