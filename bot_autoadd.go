@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"strings"
 	"io/ioutil"
-
+	
 	"gopkg.in/yaml.v2"
 	"github.com/mattermost/platform/model"
 )
@@ -262,23 +262,23 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 
                         
 
+                         
 
 						 for i, channelInTeam := range allChannel{
 
-						 	// removed optional list from default list
-						 	 for _, blackList  :=  range v{
+						    
+						     
 
+						 isChannelAvailable :=in_array(channelInTeam.Name, v)
 
-						 	 	if channelInTeam.Name != blackList{
+						 	 if !isChannelAvailable{
  							
- 							channelList[i] = channelInTeam.Name
- 								
- 								}
+ 								channelList[i] = channelInTeam.Name
 
  								}
  								
- 							
  						}
+ 					
 						 
 
 						 	 	AddUserToTeam(user.Id, team.Id, k, channelList, team)
@@ -314,7 +314,7 @@ func AddUserToTeam(user string, team_id string, team_name string, channels []str
 	for _, channel_to_join := range channels {
 		rchannel, resp1 := client.GetChannelByName(channel_to_join, team_id, "");
 		if resp1.Error != nil {
-			SendMsgToDebuggingChannel("Could not get channel by name: " + channel_to_join, "")
+			// SendMsgToDebuggingChannel("Could not get channel by name: " + channel_to_join, "")
 
 			continue
 		}
@@ -353,6 +353,23 @@ func PrintError(err *model.AppError) {
 	println("\t\t" + err.Message)
 	println("\t\t" + err.Id)
 	println("\t\t" + err.DetailedError)
+}
+
+// array to check if exist
+
+func in_array(val string, array []string) (exists bool) {
+    exists = false
+    //index = -1;
+
+    for _, v := range array {
+        if val == v {
+            //index = i
+            exists = true
+            return
+        }   
+    }
+
+    return
 }
 
 func SetupGracefulShutdown() {
