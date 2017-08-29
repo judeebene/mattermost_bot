@@ -328,7 +328,7 @@ func addExistingUsers( channel_id string) {
 			 		
 			 		HandleNewUserOrExistingUserAdding(existingUser.Id)
 			 		println(" each 10 second")
-			 		time.Sleep(10 * time.Second)
+			 		time.Sleep(4 * time.Second)
 			 	}
 
 			 	println(" existing Users added")
