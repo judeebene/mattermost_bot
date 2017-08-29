@@ -1,9 +1,9 @@
-email: *******
-password: *******
-username: *******
-firstname: ********
+email: jude@localhost.com
+password: icecube100
+username: jude
+firstname: Pillar
 lastname: Bot
-server: "********"
+server: "localhost:8065"
 
 debugchannel: town-square
 
