@@ -9,10 +9,11 @@ import (
 	"os/signal"
 	"strings"
 	"io/ioutil"
-	 "regexp"
+	//regexp"
 	"gopkg.in/yaml.v2"
 	"github.com/mattermost/platform/model"
 	"time"
+	"strconv"
 )
 
 const (
@@ -255,60 +256,20 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 	}
     
 		  	
-		// monitor event for new users
-    		if event.Event ==  model.WEBSOCKET_EVENT_NEW_USER{
-    			
-         		HandleNewUserOrExistingUserAdding(event.Data["user_id"].(string))
-         		return
-         		}
-	
-
-
+		
         
-				post := model.PostFromJson(strings.NewReader(event.Data["post"].(string)))
+	post := model.PostFromJson(strings.NewReader(event.Data["post"].(string)))
 			
 				
 				 if post != nil {
 
-				 	println(post.Message)
+				 	 deleteBotPostMessage(post.Id)
+
+				 }
 
 
-				 	// Check for ping, reply with PONG
-		if matched, _ := regexp.MatchString(`(?:^|\W)ping(?:$|\W)`, post.Message); matched {
-			 println(post.Message)
-			return
-		}
-
-				 		
-
-				
-		 	 /*// if the User leave  channel and join back
-					if post.Type == model.POST_JOIN_CHANNEL {
-					
-
-						// get the current user that joined this channel
-						joinedUserName := post.Props["username"].(string)
-
-						user, resp := client.GetUserByUsername(joinedUserName, "")
-						HandleNewUserOrExistingUserAdding(user.Id)	
-
-						if resp.Error != nil {
-							println(" error getting user " + joinedUserName)
-							
-							}
-
-							
-		 				  }*/
-					
-					
-
-		 				
-
-		 
-
-			 
-			
-			
+		
+		
 
 		 
 		
@@ -318,17 +279,17 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 
       				
 	
-}
+
 
 func addExistingUsers( channel_id string) {
 	if existingUsers ,resp  := client.GetUsersInChannel(channel_id,0 ,100, "");
 
 			  resp != nil{
-			 	for _,existingUser := range existingUsers{
+			 	for i,existingUser := range existingUsers{
 			 		
 			 		HandleNewUserOrExistingUserAdding(existingUser.Id)
-			 		println(" each 8 second")
-			 		time.Sleep(8 * time.Second)
+			 		println(" user number" + strconv.Itoa(i))
+			 		time.Sleep(10 * time.Second)
 			 	}
 
 			 	println(" existing Users added")
