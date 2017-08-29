@@ -1,0 +1,31 @@
+email: no-reply@pillarproject.io
+password: nextdigit100
+username: pillar-bot
+firstname: Pillar
+lastname: Bot
+server: "community.2030.io"
+
+debugchannel: town-square
+
+team: pillarteam
+channel: town-square
+
+autoadd:
+  # pillarteam: [town-square,announcements,a-blockchain-news, a-introductions, a-jobs-to-be-done,
+  #  a-tech-support , wallet-front-end, cryptx, a-poprad-attendees,clean-communication, communication ,
+  #  contests,crypto-markets , developer-central, devops,events-live, events-online, help-looking-for,
+  #  help-offered , wallet-back-end , uxdesign , thirdparty-services, thirdparty-products , research-smartcontract,
+  #  social-youtube, social-twitter , social-linkedin , research-wallets , research-ux ,
+  #  research-projects , research-products , research-data,research-consortia , research-chatbots ,
+  #  meetings , quotes ,pillar-website , pillar-tokens , international-pr] 
+
+#team name and channels to excludes from auto adding
+  pillarteam:  [geo-africa , geo-asia , geo-canada , geo-south-america ,geo-uk , geo-usa] 
+  contests:   []
+  partners:   []
+  research:   []
+  volunteers:  []
+  core-wallet : []
+  
+
+
