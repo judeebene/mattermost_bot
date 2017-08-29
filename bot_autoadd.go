@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"strings"
 	"io/ioutil"
-	
+	 "regexp"
 	"gopkg.in/yaml.v2"
 	"github.com/mattermost/platform/model"
 )
@@ -54,7 +54,7 @@ func main() {
 
 	LoadConfiguration();
 
-	client = model.NewAPIv4Client("https://" + params.Server)
+	client = model.NewAPIv4Client("http://" + params.Server)
 
 	// Lets test to see if the mattermost server is up and running
 	MakeSureServerIsRunning()
@@ -78,10 +78,12 @@ func main() {
 	CreateBotDebuggingChannelIfNeeded()
 	//SendMsgToDebuggingChannel("_"+BOT_NAME+" has **started** running_", "")
 
+	println( "_"+BOT_NAME+" has **started** running_" + params.Server )
+
 	JoinMonitoredChannel()
 
 	// Lets start listening to some channels via the websocket!
-	webSocketClient, err := model.NewWebSocketClient("wss://" + params.Server, client.AuthToken)
+	webSocketClient, err := model.NewWebSocketClient("ws://" + params.Server, client.AuthToken)
 	if err != nil {
 		println("We failed to connect to the web socket")
 		PrintError(err)
@@ -213,96 +215,102 @@ func SendMsgToDebuggingChannel(msg string, replyToId string) {
 	}
 }
 
+
+// delete message added by Bot
+func deleteBotPostMessage( post_id string ) {
+
+	
+
+	if _, resp := client.DeletePost(post_id); resp.Error != nil {
+		println("post unable to delete")
+		PrintError(resp.Error)
+	}else{
+		println("bot post  deleted")
+	}
+	
+}
+
 func HandleWebSocketResponse(event *model.WebSocketEvent) {
+
 	HandleMsgFromMonitoredChannel(event)
 }
 
 func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
-	// If this isn't the debugging channel then lets ingore it
-	if event.Broadcast.ChannelId != monitoredChannel.Id {
-		return
-	}
 
-	// Lets only reponded to messaged posted events
-	if event.Event != model.WEBSOCKET_EVENT_POSTED {
-		return
-	}
+		
 
-	post := model.PostFromJson(strings.NewReader(event.Data["post"].(string)))
-	if post != nil {
-		// ignore my events
-		if post.UserId == botUser.Id {
-			return
+				// monitor event for new users
+    		if event.Event ==  model.WEBSOCKET_EVENT_NEW_USER{
+    			println("event" + event.Data["user_id"].(string))
+
+         		HandleNewUserOrExistingUserAdding(event.Data["user_id"].(string))
+         		}
+	
+         
+         // if its post event
+		if event.Event == model.WEBSOCKET_EVENT_POSTED {
+
+			
+				 if post != nil {
+
+				 	
+					post := model.PostFromJson(strings.NewReader(event.Data["post"].(string))
+
+		 	 // if the User leave  channel and join back
+					if post.Type == model.POST_JOIN_CHANNEL {
+					
+
+						// get the current user that joined this channel
+						joinedUserName := post.Props["username"].(string)
+
+						user, resp := client.GetUserByUsername(joinedUserName, "")
+						HandleNewUserOrExistingUserAdding(user.Id)	
+
+						if resp.Error != nil {
+							println(" error getting user " + joinedUserName)
+							
+							}
+
+							
+		 				  }
+					
+					
+
+		 				
+
+		 					// if you see any word matching 'add existing users' then respond
+					
+			//     println("Message" + post.Message)
+
+			//  if existingUsers ,resp  := client.GetUsersInChannel(debuggingChannel.Id,0 ,100, "");
+
+			//   resp != nil{
+			//  	for _,existingUser := range existingUsers{
+			 		
+			//  		HandleNewUserOrExistingUserAdding(existingUser.Id)
+			//  	}
+			//  	// delete the   " add existing user" message 
+			//  	deleteBotPostMessage(post.Id)
+			//  }
+			// return
+			// }
+
+			
+
+
+					
+
 		}
 
-		// if someone join this channel, we added the person to other channels
-		if post.Type == model.POST_JOIN_CHANNEL {
-			//SendMsgToDebuggingChannel("* responding to monitored event", "")
 
-			// get the current user that joined this channel
-			joinedUserName := post.Props["username"].(string)
+		 
+		
+		}// / end  post event
 
-			//SendMsgToDebuggingChannel("* new user " + joinedUserName + " join", "")
+		 
 
-			user, resp := client.GetUserByUsername(joinedUserName, "")
-			if resp.Error != nil {
-				//SendMsgToDebuggingChannel(" error getting user " + joinedUserName, "")
-			  println(" error getting user " + joinedUserName)
-			}
-
-				 
-			 
-			for k, v := range params.Autoadd {
-				if team, resp := client.GetTeamByName(k, ""); resp.Error == nil {
-					  
-					 
-					// get the list of Channels from the team
-					if allChannel , err := client.GetPublicChannelsForTeam(team.Id,0,100 , ""); err.Error == nil{
-					 	
-                         channelList := make([]string, len(allChannel))
-
-                        
-
-                         
-
-						 for i, channelInTeam := range allChannel{
-
-						    
-		     
-
-						 isChannelAvailable :=in_array(channelInTeam.Name, v)
-
-						 	 if !isChannelAvailable{
- 							
- 								channelList[i] = channelInTeam.Name
-
- 								}
- 								
- 						}
- 					
-						 
-
-						 	 	AddUserToTeam(user.Id, team.Id, k, channelList, team)
-						 	 
-						 	   //}
-						      //}
-						
-					 	
-
-
-					 }
-					
-				} else {
-					//SendMsgToDebuggingChannel(" error getting team " + k, "")
-					println( " error getting team " + k, "")
-
-					PrintError(resp.Error)
-				}
-
-			}
-
-		 }
-	}
+      				
+	
 }
 
 func AddUserToTeam(user string, team_id string, team_name string, channels []string, tr *model.Team) {
@@ -330,6 +338,62 @@ func AddUserToTeam(user string, team_id string, team_name string, channels []str
 			PrintError(err)
 		}
 	}
+}
+
+
+func HandleNewUserOrExistingUserAdding( user_id string) {
+
+
+	  println("add to all channels" + user_id)
+
+	for k, v := range params.Autoadd {
+
+				if team, resp := client.GetTeamByName(k, ""); resp.Error == nil {
+
+
+						// if its the pillar team, add user to channnel too
+                         if(k == "pillarteam"){
+					
+						 println("add to all channels" + k)
+
+
+
+					if allChannel , err := client.GetPublicChannelsForTeam(team.Id,0,100 , ""); err.Error == nil{
+					 	
+                         channelList := make([]string, len(allChannel))
+
+						 for i, channelInTeam := range allChannel{
+
+
+						 isChannelAvailable :=in_array(channelInTeam.Name, v)
+
+						 	 if !isChannelAvailable{
+ 							
+ 								channelList[i] = channelInTeam.Name
+
+ 								}
+ 								
+ 								}
+ 							AddUserToTeam(user_id, team.Id, k, channelList, team)
+ 							}
+
+						 	 	
+
+						}else{
+					
+					  AddUserToTeam(user_id, team.Id, k, v, team)
+					}
+						
+					
+				} else {
+					//SendMsgToDebuggingChannel(" error getting team " + k, "")
+					println( " error getting team " + k, "")
+
+					PrintError(resp.Error)
+				}
+
+			}
+	
 }
 
 // https://api.mattermost.com/#tag/channels%2Fpaths%2F~1channels~1%7Bchannel_id%7D~1members%2Fpost
