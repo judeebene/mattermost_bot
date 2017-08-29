@@ -12,6 +12,7 @@ import (
 	 "regexp"
 	"gopkg.in/yaml.v2"
 	"github.com/mattermost/platform/model"
+	"time"
 )
 
 const (
@@ -326,6 +327,8 @@ func addExistingUsers( channel_id string) {
 			 	for _,existingUser := range existingUsers{
 			 		
 			 		HandleNewUserOrExistingUserAdding(existingUser.Id)
+
+			 		time.Sleep(100 * time.Millisecond)
 			 	}
 
 			 	println(" existing Users added")
