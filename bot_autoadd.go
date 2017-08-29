@@ -94,6 +94,8 @@ func main() {
 	webSocketClient.Listen()
 
 	go func() {
+
+		// add existing users
 		for {
 			select {
 			case resp := <-webSocketClient.EventChannel:
@@ -196,6 +198,9 @@ func JoinMonitoredChannel() {
 		PrintError(resp.Error)
 	} else {
 		monitoredChannel = rchannel
+
+		addExistingUsers(monitoredChannel.Id)
+
 		return
 	}
 
@@ -276,7 +281,7 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 				 		
 
 				
-		 	 // if the User leave  channel and join back
+		 	 /*// if the User leave  channel and join back
 					if post.Type == model.POST_JOIN_CHANNEL {
 					
 
@@ -292,28 +297,17 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 							}
 
 							
-		 				  }
+		 				  }*/
 					
 					
 
 		 				
 
-		 	// if you see any word matching 'add existing users' then respond
-					
-			//     println("Message" + post.Message)
+		 
 
-			//  if existingUsers ,resp  := client.GetUsersInChannel(debuggingChannel.Id,0 ,100, "");
-
-			//   resp != nil{
-			//  	for _,existingUser := range existingUsers{
-			 		
-			//  		HandleNewUserOrExistingUserAdding(existingUser.Id)
-			//  	}
-			//  	// delete the   " add existing user" message 
-			//  	deleteBotPostMessage(post.Id)
-			//  }
-			// return
-			// 
+			 
+			
+			
 
 		 
 		
@@ -323,6 +317,20 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 
       				
 	
+}
+
+func addExistingUsers( channel_id string) {
+	if existingUsers ,resp  := client.GetUsersInChannel(channel_id,0 ,100, "");
+
+			  resp != nil{
+			 	for _,existingUser := range existingUsers{
+			 		
+			 		HandleNewUserOrExistingUserAdding(existingUser.Id)
+			 	}
+
+			 	println(" existing Users added")
+			 	
+			 }
 }
 
 func AddUserToTeam(user string, team_id string, team_name string, channels []string, tr *model.Team) {
