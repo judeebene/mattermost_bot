@@ -1,9 +1,9 @@
-email: jude@localhost.com
-password: icecube100
-username: jude
+email: no-reply@pillarproject.io
+password: nextdigit100
+username: pillar-bot
 firstname: Pillar
 lastname: Bot
-server: "localhost:8065"
+server: "community.2030.io"
 
 debugchannel: town-square
 

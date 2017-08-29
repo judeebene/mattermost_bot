@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"strings"
 	"io/ioutil"
-	// "regexp"
+	 "regexp"
 	"gopkg.in/yaml.v2"
 	"github.com/mattermost/platform/model"
 )
@@ -54,7 +54,7 @@ func main() {
 
 	LoadConfiguration();
 
-	client = model.NewAPIv4Client("http://" + params.Server)
+	client = model.NewAPIv4Client("https://" + params.Server)
 
 	// Lets test to see if the mattermost server is up and running
 	MakeSureServerIsRunning()
@@ -83,7 +83,7 @@ func main() {
 	JoinMonitoredChannel()
 
 	// Lets start listening to some channels via the websocket!
-	webSocketClient, err := model.NewWebSocketClient("ws://" + params.Server, client.AuthToken)
+	webSocketClient, err := model.NewWebSocketClient("wss://" + params.Server, client.AuthToken)
 	if err != nil {
 		println("We failed to connect to the web socket")
 		PrintError(err)
@@ -237,37 +237,45 @@ func HandleWebSocketResponse(event *model.WebSocketEvent) {
 
 func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 
-		 
-				
 
-		
+     // If this isn't the debugging channel then lets ingore it
+	if event.Broadcast.ChannelId != debuggingChannel.Id {
+		return
+	}
 
-				// monitor event for new users
+	// Lets only reponded to messaged posted events
+	if event.Event != model.WEBSOCKET_EVENT_POSTED {
+		return
+	}
+    
+		  	
+		// monitor event for new users
     		if event.Event ==  model.WEBSOCKET_EVENT_NEW_USER{
-    			println("event" + event.Data["user_id"].(string))
-
+    			
          		HandleNewUserOrExistingUserAdding(event.Data["user_id"].(string))
          		return
          		}
 	
 
-         		if event.Broadcast.ChannelId != debuggingChannel.Id {
-         	
-					return
-					}
-         
-       
-	
+
+        
 				post := model.PostFromJson(strings.NewReader(event.Data["post"].(string)))
 			
 				
 				 if post != nil {
 
+				 	println(post.Message)
+
+
+				 	// Check for ping, reply with PONG
+		if matched, _ := regexp.MatchString(`(?:^|\W)ping(?:$|\W)`, post.Message); matched {
+			 println(post.Message)
+			return
+		}
+
 				 		
 
-				 
-			
-
+				
 		 	 // if the User leave  channel and join back
 					if post.Type == model.POST_JOIN_CHANNEL {
 					
