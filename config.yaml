@@ -1,9 +1,9 @@
-email: no-reply@pillarproject.io
-password: nextdigit100
-username: pillar-bot
-firstname: Pillar
+email: bot@example.com
+password: password1
+username: Sample_Bot
+firstname: Sample
 lastname: Bot
-server: "community.2030.io"
+server: "http://localhost:8065"
 
 debugchannel: town-square
 
