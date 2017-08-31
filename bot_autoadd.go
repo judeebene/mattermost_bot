@@ -245,10 +245,7 @@ func HandleWebSocketResponse(event *model.WebSocketEvent) {
 func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 
 
-     // If this isn't the debugging channel then lets ingore it
-	if event.Broadcast.ChannelId != debuggingChannel.Id {
-		return
-	}
+  
 
 	// Lets only reponded to messaged posted events
 	if event.Event != model.WEBSOCKET_EVENT_POSTED {
@@ -269,8 +266,6 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 
 
 		
-		
-
 		 
 		
 		}// / end  post event
@@ -282,7 +277,10 @@ func HandleMsgFromMonitoredChannel(event *model.WebSocketEvent) {
 
 
 func addExistingUsers( channel_id string) {
-	if existingUsers ,resp  := client.GetUsersInChannel(channel_id,0 ,100, "");
+	//Page counting starts at 0
+	  //if the users is more than 1000, you need to run for second page,
+	//change 0 to 1,n
+	if existingUsers ,resp  := client.GetUsersInChannel(channel_id,0 ,1000, "");
 
 			  resp != nil{
 			 	for i,existingUser := range existingUsers{
@@ -290,6 +288,7 @@ func addExistingUsers( channel_id string) {
 			 		HandleNewUserOrExistingUserAdding(existingUser.Id)
 			 		println(" user number" + strconv.Itoa(i))
 			 		time.Sleep(10 * time.Second)
+
 			 	}
 
 			 	println(" existing Users added")
